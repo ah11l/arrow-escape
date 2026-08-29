@@ -21,8 +21,8 @@
 
         <!-- AdMob App ID -->
         <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="${admobAppId}"/>
+    android:name="com.google.android.gms.ads.APPLICATION_ID"
+    android:value="ca-app-pub-2956752840406313~8414852612"/>
 
         <!-- AppLovin SDK Key (replace with your key before publishing) -->
         <meta-data
