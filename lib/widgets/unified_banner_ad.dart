@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:unity_ads_plugin/unity_ads_plugin.dart';
@@ -22,9 +24,13 @@ class _UnifiedBannerAdState extends State<UnifiedBannerAd> {
   bool _admobLoaded = false;
   bool _admobFailed = false;
 
+  Timer? _retryTimer;
+  int _retryCount = 0;
+
   @override
   void initState() {
     super.initState();
+
     if (AppConstants.enableAdMob) {
       _loadAdmobBanner();
     } else {
@@ -33,41 +39,77 @@ class _UnifiedBannerAdState extends State<UnifiedBannerAd> {
   }
 
   void _loadAdmobBanner() {
-    _admobBanner = BannerAd(
+    _retryTimer?.cancel();
+    _admobBanner?.dispose();
+
+    final banner = BannerAd(
       adUnitId: widget.admobUnitId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          if (mounted) {
-            setState(() {
-              _admobLoaded = true;
-              _admobFailed = false;
-            });
-          }
+          if (!mounted) return;
+
+          _retryCount = 0;
+
+          setState(() {
+            _admobBanner = ad as BannerAd;
+            _admobLoaded = true;
+            _admobFailed = false;
+          });
         },
         onAdFailedToLoad: (ad, error) {
           ad.dispose();
-          if (mounted) {
-            setState(() {
-              _admobLoaded = false;
-              _admobFailed = true;
-            });
-          }
+
+          if (!mounted) return;
+
+          setState(() {
+            _admobBanner = null;
+            _admobLoaded = false;
+            _admobFailed = true;
+          });
+
+          debugPrint(
+            'AdMob Banner failed: ${error.code} - ${error.message}',
+          );
+
+          _scheduleRetry();
         },
       ),
-    )..load();
+    );
+
+    _admobBanner = banner;
+    banner.load();
+  }
+
+  void _scheduleRetry() {
+    if (!mounted || !AppConstants.enableAdMob) return;
+
+    final delaySeconds = _retryCount < 5
+        ? (2 << _retryCount)
+        : 60;
+
+    _retryCount++;
+
+    _retryTimer = Timer(
+      Duration(seconds: delaySeconds),
+      () {
+        if (mounted && !_admobLoaded) {
+          _loadAdmobBanner();
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
+    _retryTimer?.cancel();
     _admobBanner?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // 1. AdMob (Priority 1)
     if (AppConstants.enableAdMob) {
       if (_admobLoaded && _admobBanner != null) {
         return SizedBox(
@@ -75,8 +117,9 @@ class _UnifiedBannerAdState extends State<UnifiedBannerAd> {
           height: 50,
           child: AdWidget(ad: _admobBanner!),
         );
-      } else if (!_admobFailed) {
-        // Loading state
+      }
+
+      if (!_admobFailed) {
         return const SizedBox(
           width: 320,
           height: 50,
@@ -84,16 +127,15 @@ class _UnifiedBannerAdState extends State<UnifiedBannerAd> {
             child: SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+              ),
             ),
           ),
         );
       }
     }
 
-
-
-    // 3. Unity Ads (Priority 3)
     if (AppConstants.enableUnityAds) {
       return SizedBox(
         width: 320,
@@ -101,13 +143,14 @@ class _UnifiedBannerAdState extends State<UnifiedBannerAd> {
         child: UnityBannerAd(
           placementId: widget.unityPlacementId,
           onFailed: (placementId, error, message) {
-            debugPrint('Unity Banner failed: $error - $message');
+            debugPrint(
+              'Unity Banner failed: $error - $message',
+            );
           },
         ),
       );
     }
 
-    // If no ad network is active or all failed
     return const SizedBox(height: 50);
   }
 }
