@@ -14,22 +14,22 @@
         android:hardwareAccelerated="true"
         android:windowSoftInputMode="adjustResize">
 
-        <!-- Disable Impeller on Android to prevent Vulkan GPU driver crashes on older devices -->
+        <!-- Disable Impeller on Android -->
         <meta-data
             android:name="io.flutter.embedding.android.EnableImpeller"
             android:value="false" />
 
         <!-- AdMob App ID -->
         <meta-data
-    android:name="com.google.android.gms.ads.APPLICATION_ID"
-    android:value="ca-app-pub-2956752840406313~8414852612"/>
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-2956752840406313~8414852612"/>
 
-        <!-- AppLovin SDK Key (replace with your key before publishing) -->
+        <!-- AppLovin SDK Key -->
         <meta-data
             android:name="applovin.sdk.key"
             android:value="YOUR_APPLOVIN_SDK_KEY"/>
 
-        <!-- Disable Ad Manager if not using it -->
+        <!-- AdMob optimization -->
         <meta-data
             android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
             android:value="true"/>
@@ -43,27 +43,4 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/LaunchTheme"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-            android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
-
-        <!-- Don't delete the meta-data below.
-             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
-        <meta-data
-            android:name="flutterEmbedding"
-            android:value="2" />
-    </application>
-
-    <!-- Required for Unity Ads -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="https" />
-        </intent>
-    </queries>
-</manifest>
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale
